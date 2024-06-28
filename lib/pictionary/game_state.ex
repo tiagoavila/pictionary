@@ -12,22 +12,24 @@ defmodule Pictionary.GameState do
             players: %{},
             word: nil,
             draw: nil,
-            guesses: []
+            guesses: [],
+            players_queue: []
 
   @type t :: %__MODULE__{
           code: String.t(),
           drawing_player_id: String.t(),
-          status: :not_started | :started | :finished,
+          status: :not_started | :in_progress | :in_progress_waiting_for_word | :finished,
           players: %{String.t() => Player.t()},
           word: String.t(),
           # draw: Pictionary.Draw.t(),
           draw: String.t(),
-          guesses: [Guess.t()]
+          guesses: [Guess.t()],
+          players_queue: [Qex.t()]
         }
 
   @spec new(String.t(), Pictionary.Player.t()) :: Pictionary.GameState.t()
   def new(code, %Player{} = player1) do
-    %__MODULE__{code: code, players: %{player1.id => player1}}
+    %__MODULE__{code: code, players: %{player1.id => player1}, players_queue: Qex.new([player1.id])}
   end
 
   @spec join(Pictionary.GameState.t(), Pictionary.Player.t()) ::
@@ -35,7 +37,11 @@ defmodule Pictionary.GameState do
   def join(%__MODULE__{} = game_state, %Player{} = player) do
     case Map.keys(game_state.players) |> length() do
       n when n < @max_players ->
-        %{game_state | players: Map.put(game_state.players, player.id, player)}
+        %{
+          game_state
+          | players: Map.put(game_state.players, player.id, player),
+            players_queue: Qex.push(game_state.players_queue, player.id)
+        }
 
       _ ->
         {:error, "Max players reached"}
@@ -48,12 +54,20 @@ defmodule Pictionary.GameState do
 
     case game_state.word do
       ^guessed_word ->
-        {:guessed_correctly,
-         game_state |> update_score_after_guessed_word(player_id)}
+        {:guessed_correctly, game_state |> update_score_after_guessed_word(player_id)}
 
       _ ->
         {:guessed_incorrectly, game_state}
     end
+  end
+
+  def set_drawing_player_from_queue(%__MODULE__{} = game_state) do
+    {drawing_player_id, queue} = Qex.pop!(game_state.players_queue)
+    %{game_state | drawing_player_id: drawing_player_id, players_queue: Qex.push(queue, drawing_player_id)}
+  end
+
+  def set_word(%__MODULE__{} = game_state, word) do
+    %{game_state | word: word}
   end
 
   defp update_score_after_guessed_word(%__MODULE__{} = game_state, player_id) do
