@@ -11,6 +11,9 @@ defmodule Pictionary.Application do
       PictionaryWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:pictionary, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Pictionary.PubSub},
+      # Start the registry for tracking running games. It uses Horde: Elixir library that provides a distributed and supervised process registry.
+      {Horde.Registry, [name: Pictionary.GameRegistry, keys: :unique, members: :auto]},
+      {Horde.DynamicSupervisor, [name: Pictionary.DistributedSupervisor, strategy: :one_for_one, members: :auto]},
       # Start the Finch HTTP client for sending emails
       {Finch, name: Pictionary.Finch},
       # Start a worker by calling: Pictionary.Worker.start_link(arg)

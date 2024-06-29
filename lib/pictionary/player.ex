@@ -28,8 +28,9 @@ defmodule Pictionary.Player do
     |> generate_id()
   end
 
-  def create(params) do
-    params
+  @spec create(String.t()) :: {:error, Ecto.Changeset.t()} | {:ok, map()}
+  def create(player_name) do
+    %{name: player_name}
     |> changeset()
     |> apply_action(:create)
   end

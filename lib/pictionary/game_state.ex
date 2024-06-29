@@ -27,8 +27,8 @@ defmodule Pictionary.GameState do
           players_queue: [Qex.t()]
         }
 
-  @spec new(String.t(), Pictionary.Player.t()) :: Pictionary.GameState.t()
-  def new(code, %Player{} = player1) do
+  @spec create(String.t(), Pictionary.Player.t()) :: Pictionary.GameState.t()
+  def create(code, %Player{} = player1) do
     %__MODULE__{code: code, players: %{player1.id => player1}, players_queue: Qex.new([player1.id])}
   end
 

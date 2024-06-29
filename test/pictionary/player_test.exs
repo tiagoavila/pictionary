@@ -8,7 +8,7 @@ defmodule Pictionary.PlayerTest do
   end
 
   test "create/1" do
-    {:ok, player} = Player.create(%{name: "John"})
+    {:ok, player} = Player.create("John")
     assert player.id != nil
     assert player.name == "John"
     assert player.score == 0

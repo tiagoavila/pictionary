@@ -3,8 +3,8 @@ defmodule Pictionary.GameStateTest do
   alias Pictionary.{GameState, Player}
 
   setup_all do
-    {:ok, player1} = Player.create(%{name: "John"})
-    game_state = GameState.new("123", player1)
+    {:ok, player1} = Player.create("John")
+    game_state = GameState.create("123", player1)
     {:ok, game_state: game_state, player1: player1}
   end
 
@@ -17,24 +17,24 @@ defmodule Pictionary.GameStateTest do
 
   describe "join/2" do
     test "Join with available spots", %{game_state: game_state, player1: player1} do
-      {:ok, player2} = Player.create(%{name: "Jane"})
+      {:ok, player2} = Player.create("Jane")
       game_state = GameState.join(game_state, player2)
       assert Map.keys(game_state.players) |> length() == 2
       assert Map.has_key?(game_state.players, player1.id)
       assert Map.has_key?(game_state.players, player2.id)
     end
 
-    test "Join with Maximum players", %{game_state: game_state, player1: player1} do
-      {:ok, player2} = Player.create(%{name: "Jane"})
-      {:ok, player3} = Player.create(%{name: "Jack"})
-      {:ok, player4} = Player.create(%{name: "Jill"})
-      {:ok, player5} = Player.create(%{name: "Jim"})
-      {:ok, player6} = Player.create(%{name: "Jill"})
-      {:ok, player7} = Player.create(%{name: "Jill"})
-      {:ok, player8} = Player.create(%{name: "Jill"})
-      {:ok, player9} = Player.create(%{name: "Jill"})
-      {:ok, player10} = Player.create(%{name: "Jill"})
-      {:ok, player11} = Player.create(%{name: "Jill"})
+    test "Join with Maximum players", %{game_state: game_state} do
+      {:ok, player2} = Player.create("Jane")
+      {:ok, player3} = Player.create("Jane")
+      {:ok, player4} = Player.create("Jane")
+      {:ok, player5} = Player.create("Jane")
+      {:ok, player6} = Player.create("Jane")
+      {:ok, player7} = Player.create("Jane")
+      {:ok, player8} = Player.create("Jane")
+      {:ok, player9} = Player.create("Jane")
+      {:ok, player10} = Player.create("Jane")
+      {:ok, player11} = Player.create("Jane")
       game_state = GameState.join(game_state, player2)
       game_state = GameState.join(game_state, player3)
       game_state = GameState.join(game_state, player4)
@@ -51,7 +51,7 @@ defmodule Pictionary.GameStateTest do
 
   describe "guess/3" do
     test "Guess correctly", %{game_state: game_state, player1: player1} do
-      {:ok, player2} = Player.create(%{name: "Jane"})
+      {:ok, player2} = Player.create("Jane")
       game_state = GameState.join(game_state, player2)
       game_state = GameState.set_word(game_state, "apple")
 
@@ -61,7 +61,7 @@ defmodule Pictionary.GameStateTest do
     end
 
     test "Guess incorrectly", %{game_state: game_state, player1: player1} do
-      {:ok, player2} = Player.create(%{name: "Jane"})
+      {:ok, player2} = Player.create("Jane")
       game_state = GameState.join(game_state, player2)
       game_state = %{game_state | word: "apple"}
 
@@ -71,7 +71,7 @@ defmodule Pictionary.GameStateTest do
   end
 
   describe "set_word/2" do
-    test "Set word", %{game_state: game_state, player1: player1} do
+    test "Set word", %{game_state: game_state} do
       word = "apple"
       game_state = GameState.set_word(game_state, word)
       assert game_state.word == word
@@ -80,7 +80,7 @@ defmodule Pictionary.GameStateTest do
 
   describe "set_drawing_player_from_queue/1" do
     test "Set new drawing player from queue", %{game_state: game_state, player1: player1} do
-      {:ok, player2} = Player.create(%{name: "Jane"})
+      {:ok, player2} = Player.create("Jane")
       game_state = GameState.join(game_state, player2)
       game_state = GameState.set_drawing_player_from_queue(game_state)
       assert game_state.drawing_player_id == player1.id

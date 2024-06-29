@@ -67,6 +67,7 @@ defmodule Pictionary.MixProject do
       {:phoenix_ecto, "~> 4.0"},
       {:qex, "~> 0.5"},
       {:excoveralls, "~> 0.18", only: :test},
+      {:horde, "~> 0.9.0"},
     ]
   end
 
