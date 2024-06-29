@@ -48,6 +48,9 @@ defmodule Pictionary.GameState do
     end
   end
 
+  @spec guess(Pictionary.GameState.t(), String.t(), String.t()) ::
+          {:guessed_correctly, Pictionary.GameState.t()}
+          | {:guessed_incorrectly, Pictionary.GameState.t()}
   def guess(%__MODULE__{} = game_state, player_id, guessed_word) do
     guess = %Guess{player_id: player_id, guessed_word: guessed_word}
     game_state = %{game_state | guesses: game_state.guesses ++ [guess]}
@@ -61,11 +64,13 @@ defmodule Pictionary.GameState do
     end
   end
 
+  @spec set_drawing_player_from_queue(Pictionary.GameState.t()) :: Pictionary.GameState.t()
   def set_drawing_player_from_queue(%__MODULE__{} = game_state) do
     {drawing_player_id, queue} = Qex.pop!(game_state.players_queue)
     %{game_state | drawing_player_id: drawing_player_id, players_queue: Qex.push(queue, drawing_player_id)}
   end
 
+  @spec set_word(Pictionary.GameState.t(), String.t()) :: Pictionary.GameState.t()
   def set_word(%__MODULE__{} = game_state, word) do
     %{game_state | word: word}
   end
