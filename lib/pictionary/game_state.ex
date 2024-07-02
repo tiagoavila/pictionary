@@ -29,19 +29,24 @@ defmodule Pictionary.GameState do
 
   @spec create(String.t(), Pictionary.Player.t()) :: Pictionary.GameState.t()
   def create(code, %Player{} = player1) do
-    %__MODULE__{code: code, players: %{player1.id => player1}, players_queue: Qex.new([player1.id])}
+    %__MODULE__{
+      code: code,
+      players: %{player1.id => player1},
+      players_queue: Qex.new([player1.id])
+    }
   end
 
   @spec join(Pictionary.GameState.t(), Pictionary.Player.t()) ::
-          {:error, <<_::152>>} | Pictionary.GameState.t()
+          {:error, <<_::152>>} | {:joined, Pictionary.GameState.t()}
   def join(%__MODULE__{} = game_state, %Player{} = player) do
     case Map.keys(game_state.players) |> length() do
       n when n < @max_players ->
-        %{
-          game_state
-          | players: Map.put(game_state.players, player.id, player),
-            players_queue: Qex.push(game_state.players_queue, player.id)
-        }
+        {:joined,
+         %{
+           game_state
+           | players: Map.put(game_state.players, player.id, player),
+             players_queue: Qex.push(game_state.players_queue, player.id)
+         }}
 
       _ ->
         {:error, "Max players reached"}
@@ -67,7 +72,12 @@ defmodule Pictionary.GameState do
   @spec set_drawing_player_from_queue(Pictionary.GameState.t()) :: Pictionary.GameState.t()
   def set_drawing_player_from_queue(%__MODULE__{} = game_state) do
     {drawing_player_id, queue} = Qex.pop!(game_state.players_queue)
-    %{game_state | drawing_player_id: drawing_player_id, players_queue: Qex.push(queue, drawing_player_id)}
+
+    %{
+      game_state
+      | drawing_player_id: drawing_player_id,
+        players_queue: Qex.push(queue, drawing_player_id)
+    }
   end
 
   @spec set_word(Pictionary.GameState.t(), String.t()) :: Pictionary.GameState.t()

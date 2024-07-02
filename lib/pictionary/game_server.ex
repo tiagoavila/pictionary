@@ -5,7 +5,7 @@ defmodule Pictionary.GameServer do
   alias __MODULE__
   alias Pictionary.{GameState, Player, Guess}
 
-  @spec start_or_join_game(String.t(), any()) ::
+  @spec start_or_join_game(String.t(), String.t()) ::
           {:ok, :started, pid} | {:ok, :joined} | {:error, any()}
   def start_or_join_game(game_code, player_name) do
     case Horde.DynamicSupervisor.start_child(
@@ -19,12 +19,10 @@ defmodule Pictionary.GameServer do
       :ignore ->
         Logger.info("Game server #{inspect(game_code)} already running. Joining")
 
-        {:ok, :joined}
-
-        # case join_game(game_code, player) do
-        #   {:ok, _} -> {:ok, :joined}
-        #   {:error, _reason} = error -> error
-        # end
+        case join_game(game_code, player_name) do
+          {:ok, _} -> {:ok, :joined}
+          {:error, _reason} = error -> error
+        end
     end
   end
 
@@ -54,13 +52,88 @@ defmodule Pictionary.GameServer do
     end
   end
 
+  def via_tuple(game_code) do
+    game_code = String.upcase(game_code)
+    {:via, Horde.Registry, {Pictionary.GameRegistry, game_code}}
+  end
+
+  @spec join_game(String.t(), String.t()) :: any()
+  def join_game(game_code, player_name) do
+    GenServer.call(via_tuple(game_code), {:join, player_name})
+  end
+
+  def get_current_state(game_code) do
+    GenServer.call(via_tuple(game_code), :get_current_state)
+  end
+
+  def set_word(game_code, word) do
+    GenServer.call(via_tuple(game_code), {:set_word, word})
+  end
+
+  def guess_word(game_code, player_id, guessed_word) do
+    GenServer.call(via_tuple(game_code), {:guess, player_id, guessed_word})
+  end
+
+  ##########################################################################################
+  # Server Callbacks
+  ##########################################################################################
+
   def init({game_code, player_name}) do
     {:ok, player} = Player.create(player_name)
     {:ok, GameState.create(game_code, player)}
   end
 
-  def via_tuple(game_code) do
+  def handle_call(:get_current_state, _from, state) do
+    {:reply, state, state}
+  end
+
+  def handle_call({:join, player_name}, _from, state) do
+    if is_server_running?(state.code) do
+      {:ok, player} = Player.create(player_name)
+      case GameState.join(state, player) do
+        {:joined, new_state} ->
+          {:reply, {:ok, "#{player_name} joined the game"}, new_state}
+
+        {:error, reason} ->
+          {:reply, {:error, reason}, state}
+      end
+    else
+      {:reply, {:error, "Game not started"}, state}
+    end
+  end
+
+  def handle_call({:set_word, word}, _from, state) do
+    if is_server_running?(state.code) do
+      {:reply, {:ok, :word_set}, GameState.set_word(state, word)}
+    else
+      {:reply, {:error, "Game not started"}, state}
+    end
+  end
+
+  def handle_call({:guess, player_id, guessed_word}, _from, state) do
+    if is_server_running?(state.code) do
+      case GameState.guess(state, player_id, guessed_word) do
+        {:guessed_correctly, new_state} ->
+          {:reply, :guessed_correctly, new_state}
+
+        {:guessed_incorrectly, new_state} ->
+          {:reply, :guessed_incorrectly, new_state}
+      end
+    else
+      {:reply, {:error, "Game not started"}, state}
+    end
+  end
+
+  ##########################################################################################
+  # Other functions
+  ##########################################################################################
+
+  def is_server_running?(game_code) do
     game_code = String.upcase(game_code)
-    {:via, Horde.Registry, {Pictionary.GameRegistry, game_code}}
+
+    case Horde.Registry.lookup(Pictionary.GameRegistry, game_code) do
+      [] -> false
+      _ -> true
+    end
   end
 end
