@@ -24,7 +24,18 @@ defmodule Pictionary.GameServerTest do
       game_code = "IJKL"
       assert {:ok, :started} == GameServer.start_or_join_game(game_code, "John")
 
-      player_names = ["Jane", "Jack", "Jill", "Jim", "Jenny", "Jared", "Jasmine", "Jesse", "Jared"]
+      player_names = [
+        "Jane",
+        "Jack",
+        "Jill",
+        "Jim",
+        "Jenny",
+        "Jared",
+        "Jasmine",
+        "Jesse",
+        "Jared"
+      ]
+
       Enum.reduce(player_names, {:ok, :started}, fn name, _ ->
         assert {:ok, :joined} == GameServer.start_or_join_game(game_code, name)
         {:ok, :joined}
@@ -40,11 +51,12 @@ defmodule Pictionary.GameServerTest do
   describe "set_word/2" do
     test "Set word works" do
       game_code = "MNOP"
+      word = "apple"
       assert {:ok, :started} == GameServer.start_or_join_game(game_code, "John")
-      assert {:ok, :word_set} == GameServer.set_word(game_code, "apple")
+      assert {:ok, :word_set} == GameServer.set_word(game_code, word)
 
       game_state = GameServer.get_current_state(game_code)
-      assert game_state.word == "apple"
+      assert game_state.word == word
     end
   end
 end
