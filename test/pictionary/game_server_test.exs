@@ -59,4 +59,25 @@ defmodule Pictionary.GameServerTest do
       assert game_state.word == word
     end
   end
+
+  describe "guess_word/3" do
+    test "Guess word incorrectly" do
+      game_code = "QRST"
+      assert {:ok, :started} == GameServer.start_or_join_game(game_code, "John")
+      assert {:ok, :word_set} == GameServer.set_word(game_code, "apple")
+      player_id = GameServer.get_current_state(game_code).players |> Map.keys() |> hd()
+
+      assert :guessed_incorrectly == GameServer.guess_word(game_code, player_id, "banana")
+    end
+
+    test "Guess word correctly" do
+      game_code = "UVWX"
+      word = "apple"
+      assert {:ok, :started} == GameServer.start_or_join_game(game_code, "John")
+      assert {:ok, :word_set} == GameServer.set_word(game_code, word)
+      player_id = GameServer.get_current_state(game_code).players |> Map.keys() |> hd()
+
+      assert :guessed_correctly == GameServer.guess_word(game_code, player_id, word)
+    end
+  end
 end

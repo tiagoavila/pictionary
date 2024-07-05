@@ -52,11 +52,6 @@ defmodule Pictionary.GameServer do
     end
   end
 
-  def via_tuple(game_code) do
-    game_code = String.upcase(game_code)
-    {:via, Horde.Registry, {Pictionary.GameRegistry, game_code}}
-  end
-
   @spec join_game(String.t(), String.t()) :: any()
   def join_game(game_code, player_name) do
     GenServer.call(via_tuple(game_code), {:join, player_name})
@@ -135,5 +130,10 @@ defmodule Pictionary.GameServer do
       [] -> false
       _ -> true
     end
+  end
+
+  def via_tuple(game_code) do
+    game_code = String.upcase(game_code)
+    {:via, Horde.Registry, {Pictionary.GameRegistry, game_code}}
   end
 end
