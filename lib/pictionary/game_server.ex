@@ -5,12 +5,12 @@ defmodule Pictionary.GameServer do
   alias __MODULE__
   alias Pictionary.{GameState, Player, Guess}
 
-  @spec start_or_join_game(String.t(), String.t()) ::
-          {:ok, :started, pid} | {:ok, :joined} | {:error, any()}
-  def start_or_join_game(game_code, player_name) do
+  @spec start_or_join_game(String.t(), Player.t()) ::
+          {:ok, :started} | {:ok, :joined} | {:error, any()}
+  def start_or_join_game(game_code, player) do
     case Horde.DynamicSupervisor.start_child(
            Pictionary.DistributedSupervisor,
-           {GameServer, [game_code: game_code, player_name: player_name]}
+           {GameServer, [game_code: game_code, player: player]}
          ) do
       {:ok, _pid} ->
         Logger.info("Started game server #{inspect(game_code)}")
@@ -19,7 +19,7 @@ defmodule Pictionary.GameServer do
       :ignore ->
         Logger.info("Game server #{inspect(game_code)} already running. Joining")
 
-        case join_game(game_code, player_name) do
+        case join_game(game_code, player) do
           {:ok, _} -> {:ok, :joined}
           {:error, _reason} = error -> error
         end
@@ -28,18 +28,18 @@ defmodule Pictionary.GameServer do
 
   def child_spec(opts) do
     game_code = Keyword.get(opts, :game_code, GameServer)
-    player_name = Keyword.fetch!(opts, :player_name)
+    player = Keyword.fetch!(opts, :player)
 
     %{
       id: "#{__MODULE__}_#{game_code}",
-      start: {__MODULE__, :start_link, [game_code, player_name]},
+      start: {__MODULE__, :start_link, [game_code, player]},
       shutdown: 10_000,
       restart: :transient
     }
   end
 
-  def start_link(game_code, player_name) do
-    case GenServer.start_link(__MODULE__, {game_code, player_name}, name: via_tuple(game_code)) do
+  def start_link(game_code, player) do
+    case GenServer.start_link(__MODULE__, {game_code, player}, name: via_tuple(game_code)) do
       {:ok, pid} ->
         {:ok, pid}
 
@@ -52,9 +52,9 @@ defmodule Pictionary.GameServer do
     end
   end
 
-  @spec join_game(String.t(), String.t()) :: any()
-  def join_game(game_code, player_name) do
-    GenServer.call(via_tuple(game_code), {:join, player_name})
+  @spec join_game(String.t(), Player.t()) :: any()
+  def join_game(game_code, player) do
+    GenServer.call(via_tuple(game_code), {:join, player})
   end
 
   def get_current_state(game_code) do
@@ -73,8 +73,7 @@ defmodule Pictionary.GameServer do
   # Server Callbacks
   ##########################################################################################
 
-  def init({game_code, player_name}) do
-    {:ok, player} = Player.create(player_name)
+  def init({game_code, player}) do
     {:ok, GameState.create(game_code, player)}
   end
 
@@ -82,12 +81,11 @@ defmodule Pictionary.GameServer do
     {:reply, state, state}
   end
 
-  def handle_call({:join, player_name}, _from, state) do
+  def handle_call({:join, player}, _from, state) do
     if is_server_running?(state.code) do
-      {:ok, player} = Player.create(player_name)
       case GameState.join(state, player) do
         {:joined, new_state} ->
-          {:reply, {:ok, "#{player_name} joined the game"}, new_state}
+          {:reply, {:ok, "#{player.name} joined the game"}, new_state}
 
         {:error, reason} ->
           {:reply, {:error, reason}, state}

@@ -18,6 +18,7 @@ defmodule PictionaryWeb.Router do
     pipe_through :browser
 
     live "/", HomeLive
+    live "/play", GamePlayLive
     # get "/", PageController, :home
   end
 

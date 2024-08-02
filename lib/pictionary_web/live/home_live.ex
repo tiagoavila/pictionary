@@ -3,7 +3,7 @@ defmodule PictionaryWeb.HomeLive do
   The `HomeLive` module is responsible for handling live requests for the home page.
   """
 
-  alias Pictionary.GameStarter
+  alias Pictionary.{GameStarter, GameServer, Player}
   use PictionaryWeb, :live_view
 
   def mount(_params, _session, socket) do
@@ -16,8 +16,16 @@ defmodule PictionaryWeb.HomeLive do
   end
 
   def handle_event("submit_game", %{"game_starter" => params}, socket) do
-    changeset = GameStarter.changeset(params) |> Map.put(:action, :validate)
+    with {:ok, game_starter} <- GameStarter.create(params),
+         {:ok, player} <- Player.create(game_starter.player_name),
+         {:ok, game_status} <- GameServer.start_or_join_game(game_starter.game_code, player) do
+      IO.puts("Game create #{game_starter.game_code} - player #{game_starter.player_name}")
 
-    {:noreply, assign(socket, changeset: changeset)}
+      {:noreply,
+       push_navigate(socket, to: ~p"/play?game=#{game_starter.game_code}&player=#{player.id}")}
+    else
+      {:error, changeset} ->
+        {:noreply, assign(socket, changeset: changeset)}
+    end
   end
 end

@@ -2,6 +2,7 @@ defmodule Pictionary.GameStarter do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Pictionary.GameStarter
   alias Pictionary.GameServer
 
   @alphabet [
@@ -34,24 +35,34 @@ defmodule Pictionary.GameStarter do
   ]
 
   embedded_schema do
-    field(:name, :string, default: "Player")
+    field(:player_name, :string)
     field(:game_code, :string)
     # field(:type, Ecto.Enum, values: [:start, :join], default: :start)
   end
 
+  @type t :: %__MODULE__{
+    player_name: String.t(),
+    game_code: String.t()
+  }
+
   def changeset(attrs \\ %{}) do
     %__MODULE__{}
-    |> cast(attrs, [:name, :game_code])
-    |> validate_required([:name])
-    |> validate_length(:name, max: 50)
+    |> cast(attrs, [:player_name, :game_code])
+    |> validate_required([:player_name])
+    |> validate_length(:player_name, max: 50)
     |> validate_length(:game_code, is: 4)
   end
 
+  @spec create(
+          :invalid
+          | %{optional(:__struct__) => none(), optional(atom() | binary()) => any()}
+        ) :: {:error, Ecto.Changeset.t()} | {:ok, GameStarter.t()}
   def create(attrs \\ %{}) do
     attrs
     |> changeset()
     |> validate_if_there_is_a_game_running()
     |> generate_game_code_if_creation()
+    |> apply_action(:create)
   end
 
   defp validate_if_there_is_a_game_running(changeset) do
