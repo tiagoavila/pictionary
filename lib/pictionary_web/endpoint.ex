@@ -33,6 +33,10 @@ defmodule PictionaryWeb.Endpoint do
     plug Phoenix.CodeReloader
   end
 
+  socket "/socket", PictionaryWeb.UserSocket,
+    websocket: true,
+    longpoll: false
+
   plug Phoenix.LiveDashboard.RequestLogger,
     param_key: "request_logger",
     cookie_key: "request_logger"

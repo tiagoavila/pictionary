@@ -48,6 +48,7 @@ window.onload = function() {
         }
 
         console.log(coordinates);
+        channel.push('ping', {page: '3'})
     }
 
     function exportDrawing() {
