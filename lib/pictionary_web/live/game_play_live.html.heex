@@ -1,15 +1,16 @@
 <h1 class="mt-2 flex items-center text-lg font-semibold leading-6">
-    Pictionary Live Play!
+  Pictionary Live Play!
 </h1>
-<div class="container mx-auto">
-    <p>
-        <label>Choose color</label>
-        <input type="color" id="colorPicker" value="#000000">
-    </p>
-    <p>
-        <label for="exportCheckbox">Export after each draw</label>
-        <input type="checkbox" id="exportCheckbox">
-    </p>
+<div class="container mx-auto" id="game-play-live" phx-hook="SomeFunction">
+  <p>
+    <label>Choose color</label>
+    <input type="color" id="colorPicker" value="#000000" />
+  </p>
+  <p>
+    <label for="exportCheckbox">Export after each draw</label>
+    <input type="checkbox" id="exportCheckbox" />
+  </p>
 
-    <canvas id="drawingCanvas" width="700" height="550"></canvas>
+  <canvas id="drawingCanvas" width="700" height="550"></canvas>
 </div>
+
