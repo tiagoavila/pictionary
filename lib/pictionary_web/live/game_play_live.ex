@@ -11,8 +11,8 @@ defmodule PictionaryWeb.GamePlayLive do
     {:ok, socket |> assign(game_code: game_code, player_id: player_id, game: game_state)}
   end
 
-  def handle_event("pong", %{"simone" => page}, socket) do
-    IO.puts("received event pong da simone with value #{page}")
+  def handle_event("drawClientToServer", %{"coordinates" => coordinates, "color" => color}, socket) do
+    IO.puts("received draw event from client with coordinates #{coordinates} and color #{color}")
    {:noreply, socket}
   end
 end

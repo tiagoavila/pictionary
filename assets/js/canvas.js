@@ -1,8 +1,5 @@
-import socket from "./user_socket";
-
-export const SomeFunction = {
+export const InitializeCanvas = {
     mounted() {
-
         let SELF = this;
         const canvas = document.getElementById('drawingCanvas');
         if (!canvas) {
@@ -22,11 +19,6 @@ export const SomeFunction = {
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseout', stopDrawing);
         colorPicker.addEventListener('input', changeColor);
-
-        let channel = socket.channel("draw_updates:lobby", {})
-        channel.join()
-            .receive("ok", resp => { console.log("Joined successfully", resp) })
-            .receive("error", resp => { console.log("Unable to join", resp) })
 
         function changeColor() {
             context.strokeStyle = colorPicker.value;
@@ -58,11 +50,10 @@ export const SomeFunction = {
                 exportDrawing();
             }
 
-            console.log(coordinates);
-
-            channel.push('ping', { tiago: 'ping' })
-
-            SELF.pushEvent('pong', { simone: 'pong' })
+            SELF.pushEvent('drawClientToServer', { 
+                coordinates: coordinates, 
+                color: colorPicker.value 
+            });
         }
 
         function exportDrawing() {

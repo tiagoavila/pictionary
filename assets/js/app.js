@@ -1,7 +1,7 @@
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
-import "./user_socket.js"
-import {SomeFunction} from "./canvas.js"
+// import "./user_socket.js"
+import {InitializeCanvas} from "./canvas.js"
 
 // You can include dependencies in two ways.
 //
@@ -24,7 +24,7 @@ import {LiveSocket} from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 
 let Hooks = {}
-Hooks.SomeFunction = SomeFunction
+Hooks.InitializeCanvas = InitializeCanvas
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
