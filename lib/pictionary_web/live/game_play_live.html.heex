@@ -6,11 +6,7 @@
     <label>Choose color</label>
     <input type="color" id="colorPicker" value="#000000" />
   </p>
-  <p>
-    <label for="exportCheckbox">Export after each draw</label>
-    <input type="checkbox" id="exportCheckbox" />
-  </p>
-
+  <input type="hidden" id="game_code" value={@game_code}>
   <canvas id="drawingCanvas" width="700" height="550"></canvas>
 </div>
 

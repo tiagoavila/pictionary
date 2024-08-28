@@ -11,7 +11,7 @@ export const InitializeCanvas = {
         const context = canvas.getContext('2d');
         let drawing = false;
         const colorPicker = document.getElementById('colorPicker');
-        const exportCheckbox = document.getElementById('exportCheckbox');
+        const gameCode = document.getElementById('game_code').value;
         let coordinates = [];
 
         canvas.addEventListener('mousedown', startDrawing);
@@ -46,13 +46,10 @@ export const InitializeCanvas = {
             drawing = false;
             context.closePath();
 
-            if (exportCheckbox.checked === true) {
-                exportDrawing();
-            }
-
             SELF.pushEvent('drawClientToServer', { 
                 coordinates: coordinates, 
-                color: colorPicker.value 
+                color: colorPicker.value,
+                game_code: gameCode
             });
         }
 
