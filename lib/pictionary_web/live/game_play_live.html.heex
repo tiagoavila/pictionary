@@ -1,12 +1,12 @@
 <h1 class="mt-2 flex items-center text-lg font-semibold leading-6">
   Pictionary Live Play!
 </h1>
-<div class="container mx-auto" id="game-play-live" phx-hook="InitializeCanvas">
+<div class="container mx-auto" id="game-play-live" phx-hook="InitializeCanvas" data-last-update={@last_update}>
   <p>
     <label>Choose color</label>
     <input type="color" id="colorPicker" value="#000000" />
   </p>
   <input type="hidden" id="game_code" value={@game_code}>
-  <canvas id="drawingCanvas" width="700" height="550"></canvas>
+  <canvas id="drawingCanvas" width="700" height="550" ></canvas>
 </div>
 

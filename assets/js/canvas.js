@@ -60,5 +60,13 @@ export const InitializeCanvas = {
             link.download = 'canvas-drawing.png';
             link.click();
         }
+    },
+    updated() {
+        const gamePlayLiveDiv = document.getElementById('game-play-live');
+        const lastUpdateJson = gamePlayLiveDiv.getAttribute('data-last-update');
+
+        const parsedObject = JSON.parse(lastUpdateJson);
+        console.log(parsedObject.color); // Outputs: #000000
+        console.log(parsedObject.coordinates); // Outputs: the array of coordinates
     }
 }

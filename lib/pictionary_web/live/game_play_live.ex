@@ -8,7 +8,7 @@ defmodule PictionaryWeb.GamePlayLive do
       do: PubSubHelper.subscribe(game_code)
 
     game_state = GameServer.get_current_state(game_code)
-    {:ok, socket |> assign(game_code: game_code, player_id: player_id, game: game_state)}
+    {:ok, socket |> assign(game_code: game_code, player_id: player_id, game: game_state, last_update: [])}
   end
 
   def handle_event("drawClientToServer", %{"game_code" => game_code, "coordinates" => coordinates, "color" => color}, socket) do
@@ -19,6 +19,7 @@ defmodule PictionaryWeb.GamePlayLive do
 
   def handle_info({:game_state_updated, %{coordinates: coordinates, color: color}}, socket) do
     IO.puts("received game state update with coordinates #{coordinates} and color #{color}")
-    {:noreply, socket}
+    last_update_json = Jason.encode!(%{coordinates: coordinates, color: color})
+    {:noreply, assign(socket, last_update: last_update_json)}
   end
 end
