@@ -1,3 +1,5 @@
+var playerId = document.getElementById('player_id').value;
+
 export const InitializeCanvas = {
     mounted() {
         let SELF = this;
@@ -6,13 +8,13 @@ export const InitializeCanvas = {
             return;
         }
 
-        console.log('Canvas script loaded');
-
         const context = canvas.getContext('2d');
         let drawing = false;
         const colorPicker = document.getElementById('colorPicker');
         const gameCode = document.getElementById('game_code').value;
         let coordinates = [];
+        let initialDrawTime = Date.now();
+        let finalDrawTime = Date.now();
 
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
@@ -25,6 +27,7 @@ export const InitializeCanvas = {
         }
 
         function startDrawing(event) {
+            initialDrawTime = Date.now();
             coordinates = [];
             drawing = true;
             context.beginPath();
@@ -43,22 +46,19 @@ export const InitializeCanvas = {
         function stopDrawing() {
             if (!drawing) return;
 
+            finalDrawTime = Date.now();
             drawing = false;
             context.closePath();
+            let timeDiff = finalDrawTime - initialDrawTime;
+            colorPicker.setAttribute('value', context.strokeStyle);
 
             SELF.pushEvent('drawClientToServer', { 
                 coordinates: coordinates, 
-                color: colorPicker.value,
-                game_code: gameCode
+                color: context.strokeStyle,
+                time_diff: timeDiff,
+                game_code: gameCode,
+                player_id: playerId
             });
-        }
-
-        function exportDrawing() {
-            const dataURL = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.href = dataURL;
-            link.download = 'canvas-drawing.png';
-            link.click();
         }
     },
     updated() {
@@ -67,32 +67,42 @@ export const InitializeCanvas = {
             return;
         }
 
-        const context = canvas.getContext('2d');
+        // const playerId = document.getElementById('player_id').value;
         const gamePlayLiveDiv = document.getElementById('game-play-live');
         const lastUpdateJson = gamePlayLiveDiv.getAttribute('data-last-update');
-
         const parsedObject = JSON.parse(lastUpdateJson);
-        console.log(parsedObject.color); // Outputs: #000000
-        console.log(parsedObject.coordinates); // Outputs: the array of coordinates
-        
+        if (parsedObject.player_id === playerId) {
+            return; // Ignore updates from the same player
+        }
+
+        const context = canvas.getContext('2d');
         context.strokeStyle = parsedObject.color;
-        let data = parsedObject;
-        if (data.coordinates.length > 0) {
+
+        if (parsedObject.coordinates.length > 0) {
+            let timeBetweenCoordinatesDrawn = parsedObject.time_diff / parsedObject.coordinates.length;
             // Start a new path
             context.beginPath();
-            
-            let first_coordinate = data.coordinates[0];
+
+            let first_coordinate = parsedObject.coordinates[0];
             // Move to the first point
             context.moveTo(first_coordinate[0], first_coordinate[1]);
-            
-            // Draw dots at each point
-            data.coordinates.forEach(coordinate => {
-                // Draw a dot
+
+            // Function to draw each coordinate with a delay
+            function drawWithDelay(index) {
+                if (index >= parsedObject.coordinates.length) {
+                    return; // Stop when all coordinates are drawn
+                }
+
+                let coordinate = parsedObject.coordinates[index];
                 context.lineTo(coordinate[0], coordinate[1]);
                 context.stroke();
-            });
-            
-            // Stroke the path (draw the lines)
+
+                // Call the function again after the delay
+                setTimeout(() => drawWithDelay(index + 1), timeBetweenCoordinatesDrawn);
+            }
+
+            // Start drawing from the first coordinate
+            drawWithDelay(1);
         }
     }
 }
