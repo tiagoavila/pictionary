@@ -62,11 +62,37 @@ export const InitializeCanvas = {
         }
     },
     updated() {
+        const canvas = document.getElementById('drawingCanvas');
+        if (!canvas) {
+            return;
+        }
+
+        const context = canvas.getContext('2d');
         const gamePlayLiveDiv = document.getElementById('game-play-live');
         const lastUpdateJson = gamePlayLiveDiv.getAttribute('data-last-update');
 
         const parsedObject = JSON.parse(lastUpdateJson);
         console.log(parsedObject.color); // Outputs: #000000
         console.log(parsedObject.coordinates); // Outputs: the array of coordinates
+        
+        context.strokeStyle = parsedObject.color;
+        let data = parsedObject;
+        if (data.coordinates.length > 0) {
+            // Start a new path
+            context.beginPath();
+            
+            let first_coordinate = data.coordinates[0];
+            // Move to the first point
+            context.moveTo(first_coordinate[0], first_coordinate[1]);
+            
+            // Draw dots at each point
+            data.coordinates.forEach(coordinate => {
+                // Draw a dot
+                context.lineTo(coordinate[0], coordinate[1]);
+                context.stroke();
+            });
+            
+            // Stroke the path (draw the lines)
+        }
     }
 }

@@ -12,13 +12,13 @@ defmodule PictionaryWeb.GamePlayLive do
   end
 
   def handle_event("drawClientToServer", %{"game_code" => game_code, "coordinates" => coordinates, "color" => color}, socket) do
-    IO.puts("received draw event from game #{game_code} with coordinates #{coordinates} and color #{color}")
+    IO.puts("received draw event from game #{game_code}")
     PubSubHelper.broadcast_game_state(game_code, coordinates, color)
     {:noreply, socket}
   end
 
   def handle_info({:game_state_updated, %{coordinates: coordinates, color: color}}, socket) do
-    IO.puts("received game state update with coordinates #{coordinates} and color #{color}")
+    IO.puts("received game state update")
     last_update_json = Jason.encode!(%{coordinates: coordinates, color: color})
     {:noreply, assign(socket, last_update: last_update_json)}
   end
