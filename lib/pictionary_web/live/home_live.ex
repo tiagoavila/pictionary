@@ -7,15 +7,19 @@ defmodule PictionaryWeb.HomeLive do
   use PictionaryWeb, :live_view
 
   def mount(_params, _session, socket) do
+    IO.puts("mounting home live view")
     {:ok, assign(socket, changeset: GameStarter.changeset())}
   end
 
   def handle_event("validate", %{"game_starter" => params}, socket) do
+    IO.puts("validating game starter params")
     changeset = GameStarter.changeset(params) |> Map.put(:action, :validate)
     {:noreply, assign(socket, changeset: changeset)}
   end
 
   def handle_event("submit_game", %{"game_starter" => params}, socket) do
+    IO.puts("submitting game starter params")
+
     with {:ok, game_starter} <- GameStarter.create(params),
          {:ok, player} <- Player.create(game_starter.player_name),
          {:ok, game_status} <- GameServer.start_or_join_game(game_starter.game_code, player) do

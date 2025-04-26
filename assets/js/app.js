@@ -1,7 +1,7 @@
 // If you want to use Phoenix channels, run `mix help phx.gen.channel`
 // to get started and then uncomment the line below.
 // import "./user_socket.js"
-import {InitializeCanvas} from "./canvas.js"
+import {InitializeCanvas, addEventListenerForDrawUpdates} from "./canvas.js"
 
 // You can include dependencies in two ways.
 //
@@ -37,6 +37,7 @@ let liveSocket = new LiveSocket("/live", Socket, {
 topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
+addEventListenerForDrawUpdates();
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()

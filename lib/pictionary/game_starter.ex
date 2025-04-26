@@ -41,9 +41,9 @@ defmodule Pictionary.GameStarter do
   end
 
   @type t :: %__MODULE__{
-    player_name: String.t(),
-    game_code: String.t()
-  }
+          player_name: String.t(),
+          game_code: String.t()
+        }
 
   def changeset(attrs \\ %{}) do
     %__MODULE__{}
@@ -69,10 +69,10 @@ defmodule Pictionary.GameStarter do
     with true <- changeset.valid?,
          game_code <- get_change(changeset, :game_code),
          false <- is_nil(game_code) do
-          case GameServer.is_server_running?(game_code) do
-            true -> changeset
-            false -> add_error(changeset, :game_code, "There is no game running with this code")
-          end
+      case GameServer.is_server_running?(game_code) do
+        true -> changeset
+        false -> add_error(changeset, :game_code, "There is no game running with this code")
+      end
     else
       _ -> changeset
     end

@@ -1,13 +1,58 @@
-<h1 class="mt-2 flex items-center text-lg font-semibold leading-6">
+<h1 class="mt-2 mb-4 flex items-center text-lg font-semibold leading-6">
   Pictionary Live Play!
 </h1>
-<div class="container mx-auto" id="game-play-live" phx-hook="InitializeCanvas" data-last-update={@last_update}>
-  <p>
-    <label>Choose color</label>
-    <input type="color" id="colorPicker" value="#000000" />
-  </p>
-  <input type="hidden" id="game_code" value={@game_code}>
-  <input type="hidden" id="player_id" value={@player_id}>
-  <canvas id="drawingCanvas" width="700" height="550" ></canvas>
+
+<hr />
+
+<div class="flex justify-left space-x-2 mb-4 mt-4">
+  <button
+    id="drawBtn"
+    class="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+  >
+    Draw
+  </button>
+  <button
+    id="fillBtn"
+    class="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400"
+  >
+    Fill
+  </button>
+  <button
+    id="clearBtn"
+    class="px-4 py-2 bg-red-500 text-white font-semibold rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+  >
+    Clear Canvas
+  </button>
 </div>
 
+<div class="flex flex-wrap justify-left items-center gap-4 mb-4">
+  <div class="flex items-center">
+    <label for="colorInput" class="mr-2 text-gray-700">Drawing Color:</label>
+    <input
+      type="color"
+      id="colorInput"
+      value="#000000"
+      class="h-8 w-16 cursor-pointer border border-gray-300 rounded"
+    />
+  </div>
+
+  <div class="flex items-center">
+    <label for="fillColorInput" class="mr-2 text-gray-700">Fill Color:</label>
+    <input
+      type="color"
+      id="fillColorInput"
+      value="#ff0000"
+      class="h-8 w-16 cursor-pointer border border-gray-300 rounded"
+    />
+  </div>
+</div>
+
+<div
+  class="flex justify-left mb-4"
+  id="game-play-live"
+  phx-hook="InitializeCanvas"
+>
+  <input type="hidden" id="game_code" value={@game_code} />
+  <input type="hidden" id="player_id" value={@player_id} />
+  <canvas id="drawingCanvas" width="700" height="550"></canvas>
+</div>
