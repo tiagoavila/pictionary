@@ -9,11 +9,12 @@ defmodule PubSubHelper do
     PubSub.subscribe(Pictionary.PubSub, "game-#{game_code}")
   end
 
-  def broadcast_game_state(game_code, draw_update_data) do
+  @spec broadcast_game_state(atom, String.t(), map) :: :ok
+  def broadcast_game_state(event_name, game_code, draw_update_data) do
     PubSub.broadcast(
       Pictionary.PubSub,
       "game-#{game_code}",
-      {:draw_updated, draw_update_data}
+      {event_name, draw_update_data}
     )
   end
 end
