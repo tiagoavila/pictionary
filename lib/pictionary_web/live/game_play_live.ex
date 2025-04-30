@@ -15,17 +15,20 @@ defmodule PictionaryWeb.GamePlayLive do
   end
 
   def handle_event("drawUpdated", %{"game_code" => game_code} = data, socket) do
-    IO.puts("received draw event from game #{game_code}")
-
     update_map = parse_string_keys_to_atom_keys(data)
     PubSubHelper.broadcast_game_state(:draw_updated, game_code, update_map)
     {:noreply, socket}
   end
 
-  def handle_event("FillAreaUpdated", %{"click_coordinates" => [x, y], "fillColor" => fillColor} = data, socket) do
-    IO.puts("received fill area event from game #{socket.assigns.game_code} at coordinates #{x}, #{y} with color #{fillColor}")
+  def handle_event("fillAreaUpdated", %{"click_coordinates" => [x, y], "fillColor" => fillColor} = data, socket) do
     update_map = parse_string_keys_to_atom_keys(data)
     PubSubHelper.broadcast_game_state(:fill_area_updated, socket.assigns.game_code, update_map)
+    {:noreply, socket}
+  end
+
+  def handle_event("clearDraw", data, socket) do
+    update_map = parse_string_keys_to_atom_keys(data)
+    PubSubHelper.broadcast_game_state(:clear_draw, socket.assigns.game_code, update_map)
     {:noreply, socket}
   end
 
@@ -37,6 +40,11 @@ defmodule PictionaryWeb.GamePlayLive do
   def handle_info({:fill_area_updated, fill_area_update_data}, socket) do
     last_fill_json = Jason.encode!(fill_area_update_data)
     {:noreply, push_event(socket, "fill-area-updated", %{data: last_fill_json})}
+  end
+
+  def handle_info({:clear_draw, clear_draw_data}, socket) do
+    last_clear_json = Jason.encode!(clear_draw_data)
+    {:noreply, push_event(socket, "clear-draw", %{data: last_clear_json})}
   end
 
   defp parse_string_keys_to_atom_keys(map_with_string_keys) do

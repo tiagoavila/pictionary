@@ -49,9 +49,18 @@ export const InitializeCanvas = {
         }
 
         function clearCanvasDraw() {
-            context.fillStyle = "white";
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            context.fillStyle = colorInput.value;
+            let canvas = getCanvas();
+            if (!canvas) {
+                return;
+            }
+
+            let context = getCanvasContext(canvas);
+            doClearCanvasDraw(context, canvas);
+
+            pushEventToBackend('clearDraw', {
+                game_code: getGameCode(),
+                player_id: getPlayerId()
+            });
         }
 
         function changeColor() {
@@ -77,7 +86,7 @@ export const InitializeCanvas = {
                     game_code: getGameCode(),
                     player_id: getPlayerId() 
                 };
-                pushEventToBackend('FillAreaUpdated', eventData); 
+                pushEventToBackend('fillAreaUpdated', eventData); 
             }
         }
 
@@ -185,6 +194,24 @@ export function addEventListenersForDrawUpdates() {
 
         // Call the flood fill function with the coordinates
         floodFill(parsedObject.click_coordinates[0], parsedObject.click_coordinates[1], parsedObject.fillColor, canvas, context);
+    });
+
+    window.addEventListener("phx:clear-draw", (e) => {
+        const canvas = getCanvas();
+        if (!canvas) {
+            return;
+        }
+
+        const playerId = getPlayerId();
+        const parsedObject = JSON.parse(e.detail.data);
+        if (parsedObject.player_id === playerId) {
+            console.log("same player");
+            return; // Ignore updates from the same player
+        }
+
+        const context = getCanvasContext(canvas);
+
+        doClearCanvasDraw(context, canvas);
     });
 }
 
@@ -327,4 +354,10 @@ function hexToRgb(hex) {
     const b = parseInt(hex.substring(4, 6), 16);
 
     return { r, g, b };
+}
+
+function doClearCanvasDraw(context, canvas) {
+    context.fillStyle = "white";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = colorInput.value;
 }
