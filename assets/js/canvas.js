@@ -1,5 +1,17 @@
+import socket from "./user_socket.js"
+
 export const InitializeCanvas = {
     mounted() {
+        let gameCode = getGameCode();
+        let game_chat_channel = socket.channel(`guesses_chat:${gameCode}`, {});
+        game_chat_channel.join()
+          .receive("ok", resp => { console.log(`JOINED GAME: ${gameCode} Channel`, resp) })
+          .receive("error", resp => { console.log(`Unable to join ${gameCode} Channel`, resp) })
+
+        game_chat_channel.push("shout", { message: `Hello everybody! ${gameCode}` });
+
+        game_chat_channel.on("shout", payload => { console.log("Received shout", payload) });
+
         let SELF = this;
         const canvas = getCanvas();
         if (!canvas) {
@@ -119,11 +131,6 @@ export const InitializeCanvas = {
     }
 }
 
-function startDraw(context, x, y) {
-    context.beginPath();
-    context.moveTo(x, y);
-}
-
 export function addEventListenersForDrawUpdates() {
     window.addEventListener("phx:draw-updated", (e) => {
         const canvas = getCanvas();
@@ -200,6 +207,11 @@ export function addEventListenersForDrawUpdates() {
 
         doClearCanvasDraw(context, canvas);
     });
+}
+
+function startDraw(context, x, y) {
+    context.beginPath();
+    context.moveTo(x, y);
 }
 
 function draw(context, x, y) {
