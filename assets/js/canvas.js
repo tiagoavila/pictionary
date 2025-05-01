@@ -17,14 +17,9 @@ export const InitializeCanvas = {
         let isDrawing = false;
         let mode = "draw"; // "draw" or "fill"
 
-        let coordinates = [];
-
-        let initialDrawTime = Date.now();
-        let finalDrawTime = Date.now();
-
         // Set up canvas listeners
         canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mousemove', drawing);
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseout', stopDrawing);
 
@@ -69,11 +64,15 @@ export const InitializeCanvas = {
 
         function startDrawing(event) {
             if (mode === "draw") {
-                initialDrawTime = Date.now();
-                coordinates = [];
                 isDrawing = true;
-                context.beginPath();
-                context.moveTo(event.offsetX, event.offsetY);
+                startDraw(context, event.offsetX, event.offsetY);
+
+                let eventData = {
+                    click_coordinates: [event.offsetX, event.offsetY],
+                    game_code: getGameCode(),
+                    player_id: getPlayerId()
+                };
+                pushEventToBackend('draw-started', eventData); 
             }  else if (mode === "fill") {
                 const rect = canvas.getBoundingClientRect();
                 const x = Math.floor(event.clientX - rect.left);
@@ -90,14 +89,11 @@ export const InitializeCanvas = {
             }
         }
 
-        function draw(event) {
+        function drawing(event) {
             if (!isDrawing) return;
             if (mode === "fill") return; // Prevent drawing while in fill mode
 
-            context.lineTo(event.offsetX, event.offsetY);
-            context.stroke();
-
-            coordinates.push([event.offsetX, event.offsetY]);
+            draw(context, event.offsetX, event.offsetY);
 
             let eventData = {
                 click_coordinates: [event.offsetX, event.offsetY],
@@ -105,7 +101,7 @@ export const InitializeCanvas = {
                 game_code: getGameCode(),
                 player_id: getPlayerId()
             };
-            pushEventToBackend('draw-updated-real-time', eventData); 
+            pushEventToBackend('draw-updated', eventData); 
         }
 
         function stopDrawing() {
@@ -113,22 +109,6 @@ export const InitializeCanvas = {
             if (mode === "fill") return; // Prevent drawing while in fill mode
 
             isDrawing = false;
-            // context.closePath();
-
-            finalDrawTime = Date.now();
-            let timeDiff = finalDrawTime - initialDrawTime;
-
-            const gameCode = getGameCode();
-            const playerId = getPlayerId();
-
-            // let eventData = {
-            //     coordinates: coordinates,
-            //     color: context.strokeStyle,
-            //     time_diff: timeDiff,
-            //     game_code: gameCode,
-            //     player_id: playerId
-            // };
-            // pushEventToBackend('drawUpdated', eventData);
         }
 
         function pushEventToBackend(eventName, eventData) {
@@ -137,6 +117,11 @@ export const InitializeCanvas = {
     },
     updated() {
     }
+}
+
+function startDraw(context, x, y) {
+    context.beginPath();
+    context.moveTo(x, y);
 }
 
 export function addEventListenersForDrawUpdates() {
@@ -155,36 +140,12 @@ export function addEventListenersForDrawUpdates() {
 
         const context = getCanvasContext(canvas);
         context.strokeStyle = parsedObject.color;
+        draw(context, parsedObject.click_coordinates[0], parsedObject.click_coordinates[1]);
 
-        if (parsedObject.coordinates.length > 0) {
-            let timeBetweenCoordinatesDrawn = parsedObject.time_diff / parsedObject.coordinates.length;
-            // Start a new path
-            context.beginPath();
-
-            let first_coordinate = parsedObject.coordinates[0];
-            // Move to the first point
-            context.moveTo(first_coordinate[0], first_coordinate[1]);
-
-            // Function to draw each coordinate with a delay
-            function drawWithDelay(index) {
-                if (index >= parsedObject.coordinates.length) {
-                    return; // Stop when all coordinates are drawn
-                }
-
-                let coordinate = parsedObject.coordinates[index];
-                context.lineTo(coordinate[0], coordinate[1]);
-                context.stroke();
-
-                // Call the function again after the delay
-                setTimeout(() => drawWithDelay(index + 1), timeBetweenCoordinatesDrawn);
-            }
-
-            // Start drawing from the first coordinate
-            drawWithDelay(1);
-        }
+        console.log("Drawing data received:", parsedObject);
     });
 
-    window.addEventListener("phx:draw-updated-real-time", (e) => {
+    window.addEventListener("phx:draw-started", (e) => {
         const canvas = getCanvas();
         if (!canvas) {
             return;
@@ -198,11 +159,8 @@ export function addEventListenersForDrawUpdates() {
         }
 
         const context = getCanvasContext(canvas);
-        context.strokeStyle = parsedObject.color;
-        context.lineTo(parsedObject.click_coordinates[0], parsedObject.click_coordinates[1]);
-        context.stroke();
 
-        console.log("Drawing data received:", parsedObject);
+        startDraw(context, parsedObject.click_coordinates[0], parsedObject.click_coordinates[1]);
     });
 
     window.addEventListener("phx:fill-area-updated", (e) => {
@@ -242,6 +200,11 @@ export function addEventListenersForDrawUpdates() {
 
         doClearCanvasDraw(context, canvas);
     });
+}
+
+function draw(context, x, y) {
+    context.lineTo(x, y);
+    context.stroke();
 }
 
 function getCanvas() {
