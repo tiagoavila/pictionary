@@ -57,7 +57,7 @@ export const InitializeCanvas = {
             let context = getCanvasContext(canvas);
             doClearCanvasDraw(context, canvas);
 
-            pushEventToBackend('clearDraw', {
+            pushEventToBackend('clear-draw', {
                 game_code: getGameCode(),
                 player_id: getPlayerId()
             });
@@ -86,7 +86,7 @@ export const InitializeCanvas = {
                     game_code: getGameCode(),
                     player_id: getPlayerId() 
                 };
-                pushEventToBackend('fillAreaUpdated', eventData); 
+                pushEventToBackend('fill-area-updated', eventData); 
             }
         }
 
@@ -98,6 +98,14 @@ export const InitializeCanvas = {
             context.stroke();
 
             coordinates.push([event.offsetX, event.offsetY]);
+
+            let eventData = {
+                click_coordinates: [event.offsetX, event.offsetY],
+                fillColor: context.strokeStyle,
+                game_code: getGameCode(),
+                player_id: getPlayerId()
+            };
+            pushEventToBackend('draw-updated-real-time', eventData); 
         }
 
         function stopDrawing() {
@@ -105,7 +113,7 @@ export const InitializeCanvas = {
             if (mode === "fill") return; // Prevent drawing while in fill mode
 
             isDrawing = false;
-            context.closePath();
+            // context.closePath();
 
             finalDrawTime = Date.now();
             let timeDiff = finalDrawTime - initialDrawTime;
@@ -113,14 +121,14 @@ export const InitializeCanvas = {
             const gameCode = getGameCode();
             const playerId = getPlayerId();
 
-            let eventData = {
-                coordinates: coordinates,
-                color: context.strokeStyle,
-                time_diff: timeDiff,
-                game_code: gameCode,
-                player_id: playerId
-            };
-            pushEventToBackend('drawUpdated', eventData);
+            // let eventData = {
+            //     coordinates: coordinates,
+            //     color: context.strokeStyle,
+            //     time_diff: timeDiff,
+            //     game_code: gameCode,
+            //     player_id: playerId
+            // };
+            // pushEventToBackend('drawUpdated', eventData);
         }
 
         function pushEventToBackend(eventName, eventData) {
@@ -174,6 +182,27 @@ export function addEventListenersForDrawUpdates() {
             // Start drawing from the first coordinate
             drawWithDelay(1);
         }
+    });
+
+    window.addEventListener("phx:draw-updated-real-time", (e) => {
+        const canvas = getCanvas();
+        if (!canvas) {
+            return;
+        }
+
+        const playerId = document.getElementById('player_id').value;
+        const parsedObject = JSON.parse(e.detail.data);
+        if (parsedObject.player_id === playerId) {
+            console.log("same player");
+            return; // Ignore updates from the same player
+        }
+
+        const context = getCanvasContext(canvas);
+        context.strokeStyle = parsedObject.color;
+        context.lineTo(parsedObject.click_coordinates[0], parsedObject.click_coordinates[1]);
+        context.stroke();
+
+        console.log("Drawing data received:", parsedObject);
     });
 
     window.addEventListener("phx:fill-area-updated", (e) => {
